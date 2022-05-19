@@ -1,7 +1,7 @@
 const timeEl = document.getElementById('time');
 const dateEl = document.getElementById('date');
 const currentWeatherItemsEl = document.getElementById('current-weather-items');
-const timeZone = document.getElementById('time-zone');
+const timezone = document.getElementById('time-zone');
 const countryEl = document.getElementById('country');
 const weatherForecastEl = document.getElementById('weather-forecast');
 const currentTempEl = document.getElementById('current-temp');
@@ -13,6 +13,7 @@ const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 
 const API_KEY = 'a43961e85a9d95d1578f2f1e592841d4';
 
 setInterval(() => {
+
   const time = new Date();
   const month = time.getMonth();
   const date = time.getDate();
@@ -22,11 +23,12 @@ setInterval(() => {
   const minutes = time.getMinutes();
   const amPm = hour >= 12 ? 'PM' : 'AM';
 
-  timeEl.innerHTML = hoursIn12HrFormat + ':' + minutes + ' ' + `<span id="am-pm">${amPm}</span>`
+  timeEl.innerHTML = (hoursIn12HrFormat < 10 ? '0' + hoursIn12HrFormat : hoursIn12HrFormat) + ':' + (minutes < 10 ? '0' + minutes : minutes) + ' ' + `<span id="am-pm">${amPm}</span>`
 
-  dateEl.innerHTML = days[day] + ',' + date + ' ' + months[month]
+  dateEl.innerHTML = days[day] + ', ' + date + ' ' + months[month]
 
 }, 1000);
+
 getWeatherData();
 function getWeatherData() {
   navigator.geolocation.getCurrentPosition((success) => {
@@ -40,8 +42,12 @@ function getWeatherData() {
     })
   })
 }
+
 function showWeatherData(data) {
   let { humidity, pressure, sunrise, sunset, wind_speed } = data.current;
+
+  timezone.innerHTML = data.timezone;
+  countryEl.innerHTML = data.lat + 'N ' + data.lon + 'E'
 
   currentWeatherItemsEl.innerHTML =
 
@@ -66,9 +72,18 @@ function showWeatherData(data) {
     <div>${window.moment(sunset * 1000).format('HH:mm a')}</div>
   </div>`;
 
-  data.daily.forEach(day, idx) => {
-    if (idx === 0) {
+  let otherDayForecast = ''
 
+  data.daily.forEach((day, idx) => {
+    if (idx === 0) {
+      currentTempEl.innerHTML = `
+      <img src="http://openweathermap.org/img/wn/${day.weather[0].icon}@4x.png" alt="weather icon" class="w-icon">
+      <div class="other">
+        <div class="day">${window.moment(day.dt * 1000).format('ddd')}</div>
+        <div class="temp">Night - ${day.temp.night}&#176; C</div>
+        <div class="temp">Day - ${day.temp.day}&#176; C</div>
+      </div>      
+      `
     } else {
       otherDayForecast += `
       
@@ -80,5 +95,6 @@ function showWeatherData(data) {
         </div>
       `
     }
-  }
+  })
+  weatherForecastEl.innerHTML = otherDayForecast;
 };
